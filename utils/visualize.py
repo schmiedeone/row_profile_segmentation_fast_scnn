@@ -31,6 +31,10 @@ def get_color_pallete(npimg, dataset='citys'):
         out_img = Image.fromarray(npimg.astype('uint8'))
         out_img.putpalette(cityspallete)
         return out_img
+    elif dataset == 'crops':
+        out_img = Image.fromarray(npimg.astype('uint8'))
+        out_img.putpalette(cropspallete)
+        return out_img
     out_img = Image.fromarray(npimg.astype('uint8'))
     out_img.putpalette(vocpallete)
     return out_img
@@ -96,4 +100,10 @@ cityspallete = [
     0, 80, 100,
     0, 0, 230,
     119, 11, 32,
+]
+
+cropspallete = [
+    0,0,0,
+    0,255,0,
+    0,0,255,
 ]
