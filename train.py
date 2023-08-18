@@ -23,6 +23,8 @@ def parse_args():
                         help='model name (default: fast_scnn)')
     parser.add_argument('--dataset', type=str, default='citys',
                         help='dataset name (default: citys)')
+    parser.add_argument('--data-root', type=str, default='./datasets/citys',
+                        help='dataset root (default: ./datasets/citys)')
     parser.add_argument('--base-size', type=int, default=1024,
                         help='base image size')
     parser.add_argument('--crop-size', type=int, default=768,
@@ -54,7 +56,7 @@ def parse_args():
     # evaluation only
     parser.add_argument('--eval', action='store_true', default=False,
                         help='evaluation only')
-    parser.add_argument('--no-val', action='store_true', default=True,
+    parser.add_argument('--no-val', action='store_true', default=False,
                         help='skip validation during training')
     # the parser
     args = parser.parse_args()
@@ -75,8 +77,8 @@ class Trainer(object):
         ])
         # dataset and dataloader
         data_kwargs = {'transform': input_transform, 'base_size': args.base_size, 'crop_size': args.crop_size}
-        train_dataset = get_segmentation_dataset(args.dataset, split=args.train_split, mode='train', **data_kwargs)
-        val_dataset = get_segmentation_dataset(args.dataset, split='val', mode='val', **data_kwargs)
+        train_dataset = get_segmentation_dataset(args.dataset, root=args.data_root, split=args.train_split, mode='train', **data_kwargs)
+        val_dataset = get_segmentation_dataset(args.dataset, root=args.data_root, split='val', mode='val', **data_kwargs)
         self.train_loader = data.DataLoader(dataset=train_dataset,
                                             batch_size=args.batch_size,
                                             shuffle=True,
@@ -100,8 +102,7 @@ class Trainer(object):
                 self.model.load_state_dict(torch.load(args.resume, map_location=lambda storage, loc: storage))
 
         # create criterion
-        self.criterion = MixSoftmaxCrossEntropyOHEMLoss(aux=args.aux, aux_weight=args.aux_weight,
-                                                        ignore_index=-1).to(args.device)
+        self.criterion = torch.nn.CrossEntropyLoss().to(args.device)
 
         # optimizer
         self.optimizer = torch.optim.SGD(self.model.parameters(),
@@ -133,7 +134,7 @@ class Trainer(object):
                 targets = targets.to(self.args.device)
 
                 outputs = self.model(images)
-                loss = self.criterion(outputs, targets)
+                loss = self.criterion(outputs[0], targets)
 
                 self.optimizer.zero_grad()
                 loss.backward()
@@ -186,7 +187,7 @@ def save_checkpoint(model, args, is_best=False):
     if is_best:
         best_filename = '{}_{}_best_model.pth'.format(args.model, args.dataset)
         best_filename = os.path.join(directory, best_filename)
-        shutil.copyfile(filename, best_filename)
+        shutil.copyfile(save_path, best_filename)
 
 
 if __name__ == '__main__':
