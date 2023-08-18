@@ -1,6 +1,7 @@
 import os
 import argparse
 import torch
+import time
 
 from torchvision import transforms
 from models.fast_scnn import get_fast_scnn
@@ -18,8 +19,14 @@ parser.add_argument('--weights-folder', default='./weights',
 parser.add_argument('--input-pic', type=str,
                     default='./datasets/citys/leftImg8bit/test/berlin/berlin_000000_000019_leftImg8bit.png',
                     help='path to the input picture')
+parser.add_argument('--input-pic-list', type=str,
+                    default="",
+                    help='path to the input picture list')
 parser.add_argument('--outdir', default='./test_result', type=str,
                     help='path to save the predict result')
+parser.add_argument('--weight-name', type=str,
+                    default="",
+                    help='custom weight name')
 
 parser.add_argument('--cpu', dest='cpu', action='store_true')
 parser.set_defaults(cpu=False)
@@ -38,17 +45,39 @@ def demo():
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ])
-    image = Image.open(args.input_pic).convert('RGB')
-    image = transform(image).unsqueeze(0).to(device)
-    model = get_fast_scnn(args.dataset, pretrained=True, root=args.weights_folder, map_cpu=args.cpu).to(device)
+
+    image_path_list = []
+    if args.input_pic_list != "":
+        file = open(args.input_pic_list, "r")
+        image_path_list_dirty = file.readlines()
+        image_root = "/content/drive/MyDrive/0 - Schmiedeone/rowsegmentation/all_data/images"
+        for img_path in image_path_list_dirty:
+            img_path_no_trail = img_path.strip()
+            image_path_list.append(os.path.join(image_root,img_path_no_trail))
+    else :
+        image_path_list.append(args.input_pic)
+    
+    model = get_fast_scnn(args.dataset, pretrained=True, root=args.weights_folder, map_cpu=args.cpu, weight_name=args.weight_name).to(device)
     print('Finished loading model!')
     model.eval()
-    with torch.no_grad():
-        outputs = model(image)
-    pred = torch.argmax(outputs[0], 1).squeeze(0).cpu().data.numpy()
-    mask = get_color_pallete(pred, args.dataset)
-    outname = os.path.splitext(os.path.split(args.input_pic)[-1])[0] + '.png'
-    mask.save(os.path.join(args.outdir, outname))
+
+    for image_in in image_path_list:
+        start = time.time()
+        image = Image.open(image_in).convert('RGB')
+        image = image.resize((960,540),0)
+        image_transformed = transform(image).unsqueeze(0).to(device)
+        
+        with torch.no_grad():
+            outputs = model(image_transformed)
+        pred = torch.argmax(outputs[0], 1).squeeze(0).cpu().data.numpy()
+        mask = get_color_pallete(pred, args.dataset)
+        end = time.time()
+        print("Time :",(end-start) * 10**3, "ms")
+        mask_outname = os.path.splitext(os.path.split(image_in)[-1])[0] + '_result.png'
+        image_outname = os.path.splitext(os.path.split(image_in)[-1])[0] + '.png'
+        mask.save(os.path.join(args.outdir, mask_outname))
+        image.save(os.path.join(args.outdir, image_outname))
+
 
 
 if __name__ == '__main__':
