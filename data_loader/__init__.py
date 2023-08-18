@@ -1,7 +1,9 @@
 from .cityscapes import CitySegmentation
+from .croplanes import CropLaneSegmentation
 
 datasets = {
     'citys': CitySegmentation,
+    'crops': CropLaneSegmentation
 }
 
 
