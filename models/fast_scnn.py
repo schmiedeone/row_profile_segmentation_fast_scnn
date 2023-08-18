@@ -233,21 +233,28 @@ class Classifer(nn.Module):
         return x
 
 
-def get_fast_scnn(dataset='citys', pretrained=False, root='./weights', map_cpu=False, **kwargs):
+def get_fast_scnn(dataset='citys', pretrained=False, root='./weights', map_cpu=False, weight_name = "", **kwargs):
     acronyms = {
         'pascal_voc': 'voc',
         'pascal_aug': 'voc',
         'ade20k': 'ade',
         'coco': 'coco',
         'citys': 'citys',
+        'crops': 'crops',
     }
     from data_loader import datasets
     model = FastSCNN(datasets[dataset].NUM_CLASS, **kwargs)
     if pretrained:
-        if(map_cpu):
-            model.load_state_dict(torch.load(os.path.join(root, 'fast_scnn_%s.pth' % acronyms[dataset]), map_location='cpu'))
-        else:
-            model.load_state_dict(torch.load(os.path.join(root, 'fast_scnn_%s.pth' % acronyms[dataset])))
+        if weight_name != "":
+            if(map_cpu):
+                model.load_state_dict(torch.load(os.path.join(root, weight_name), map_location='cpu'))
+            else:
+                model.load_state_dict(torch.load(os.path.join(root, weight_name)))
+        else :
+            if(map_cpu):
+                model.load_state_dict(torch.load(os.path.join(root, 'fast_scnn_%s.pth' % acronyms[dataset]), map_location='cpu'))
+            else:
+                model.load_state_dict(torch.load(os.path.join(root, 'fast_scnn_%s.pth' % acronyms[dataset])))
     return model
 
 
