@@ -27,6 +27,9 @@ parser.add_argument('--outdir', default='./test_result', type=str,
 parser.add_argument('--weight-name', type=str,
                     default="",
                     help='custom weight name')
+parser.add_argument('--data-root', type=str,
+                    default="",
+                    help='dataset root folder')
 
 parser.add_argument('--cpu', dest='cpu', action='store_true')
 parser.set_defaults(cpu=False)
@@ -50,7 +53,7 @@ def demo():
     if args.input_pic_list != "":
         file = open(args.input_pic_list, "r")
         image_path_list_dirty = file.readlines()
-        image_root = "/content/drive/MyDrive/0 - Schmiedeone/rowsegmentation/all_data/images"
+        image_root = os.path.join(args.data_root, "images")
         for img_path in image_path_list_dirty:
             img_path_no_trail = img_path.strip()
             image_path_list.append(os.path.join(image_root,img_path_no_trail))
