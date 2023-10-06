@@ -70,13 +70,18 @@ def demo():
         with torch.no_grad():
             outputs = model(image_transformed)
         pred = torch.argmax(outputs[0], 1).squeeze(0).cpu().data.numpy()
-        mask = get_color_pallete(pred, args.dataset)
+        mask = get_color_pallete(pred, args.dataset).convert("RGBA")
+        image = image.convert("RGBA")
         end = time.time()
         print("Time :",(end-start) * 10**3, "ms")
-        mask_outname = os.path.splitext(os.path.split(image_in)[-1])[0] + '_result.png'
-        image_outname = os.path.splitext(os.path.split(image_in)[-1])[0] + '.png'
-        mask.save(os.path.join(args.outdir, mask_outname))
-        image.save(os.path.join(args.outdir, image_outname))
+
+        image.putalpha(255)
+        mask.putalpha(70)
+
+        image_overlayed = Image.alpha_composite(image, mask)
+        image_overlayed_name = os.path.splitext(os.path.split(image_in)[-1])[0] + '_result.png'
+        image_overlayed.save(os.path.join(args.outdir, image_overlayed_name))
+
 
 
 
