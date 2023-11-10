@@ -1,6 +1,7 @@
 import os
 import torch
 import torch.utils.data as data
+import numpy as np
 
 from torchvision import transforms
 from data_loader import get_segmentation_dataset
@@ -37,6 +38,8 @@ class Evaluator(object):
 
     def eval(self):
         self.model.eval()
+        all_pixAcc = []
+        all_mIoU = []
         for i, (image, label) in enumerate(self.val_loader):
             image = image.to(self.args.device)
 
@@ -48,11 +51,18 @@ class Evaluator(object):
 
             self.metric.update(pred, label)
             pixAcc, mIoU = self.metric.get()
+            all_pixAcc.append(pixAcc)
+            all_mIoU.append(mIoU)
             print('Sample %d, validation pixAcc: %.3f%%, mIoU: %.3f%%' % (i + 1, pixAcc * 100, mIoU * 100))
 
             predict = pred.squeeze(0)
             mask = get_color_pallete(predict, self.args.dataset)
             mask.save(os.path.join(self.outdir, 'seg_{}.png'.format(i)))
+        
+        mean_pixaAcc = np.average(all_pixAcc)
+        mean_mIoU = np.average(all_mIoU)
+
+        print('Average pixAcc: %.3f%%, mIoU: %.3f%%' % (mean_pixaAcc * 100, mean_mIoU * 100))
 
 
 if __name__ == '__main__':
