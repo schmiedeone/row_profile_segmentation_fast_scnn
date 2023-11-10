@@ -58,6 +58,12 @@ def parse_args():
                         help='evaluation only')
     parser.add_argument('--no-val', action='store_true', default=False,
                         help='skip validation during training')
+    
+    parser.add_argument('--cpu', dest='cpu', action='store_true')
+    parser.add_argument('--weight-name', type=str,
+                        default="",
+                        help='custom weight name')
+
     # the parser
     args = parser.parse_args()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
