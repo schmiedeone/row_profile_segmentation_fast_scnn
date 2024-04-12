@@ -39,6 +39,7 @@ class CropLaneSegmentation(data.Dataset):
     """
     BASE_DIR = 'croplane'
     NUM_CLASS = 3
+    # NUM_CLASS = 11
 
     def __init__(self, root='./datasets/citys', split='train', mode=None, transform=None,
                  base_size=520, crop_size=480, **kwargs):
@@ -55,6 +56,8 @@ class CropLaneSegmentation(data.Dataset):
             raise RuntimeError("Found 0 images in subfolders of: " + self.root + "\n")
         self.valid_classes = [0,1,2]
         self._key = np.array([0,1,2])
+        # self.valid_classes = [0,1,2,3,4,5,6,7,8,9,10]
+        # self._key = np.array([0,1,2,3,4,5,6,7,8,9,10])
         self._mapping = np.array(range(0, len(self._key))).astype('int32')
 
     def _class_to_index(self, mask):
